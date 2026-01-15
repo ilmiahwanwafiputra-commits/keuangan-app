@@ -493,7 +493,7 @@ function updateExpenseChart(summary) {
     expenseChart = new Chart(ctx, {
         type: 'doughnut',
         data: {
-            labels: ['Living', 'Saving', 'Playing', 'Emergency'],
+            labels: ['Kebutuhan', 'Tabungan', 'Hiburan', 'Darurat'],
             datasets: [{
                 data: [summary.livingExpense, summary.savingExpense, summary.playingExpense, summary.emergencyExpense],
                 backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444'],
@@ -630,6 +630,16 @@ function loadTransactionList() {
     container.innerHTML = transactions.map(tx => createTransactionHTML(tx, true)).join('');
 }
 
+function getCategoryLabel(category) {
+    const labels = {
+        living: 'Kebutuhan',
+        saving: 'Tabungan',
+        playing: 'Hiburan',
+        emergency: 'Darurat'
+    };
+    return labels[category] || category;
+}
+
 function createTransactionHTML(tx, showActions = false) {
     const icons = {
         living: '🏠',
@@ -643,6 +653,7 @@ function createTransactionHTML(tx, showActions = false) {
     const iconClass = tx.type === 'income' ? 'income' : tx.category;
     const amountClass = tx.type === 'income' ? 'income' : 'expense';
     const amountPrefix = tx.type === 'income' ? '+' : '-';
+    const categoryLabel = getCategoryLabel(tx.category);
 
     const actionsHTML = showActions ? `
         <div class="tx-actions">
@@ -655,8 +666,8 @@ function createTransactionHTML(tx, showActions = false) {
             <div class="tx-info">
                 <div class="tx-icon ${iconClass}">${icon}</div>
                 <div class="tx-details">
-                    <h4>${tx.description || tx.category}</h4>
-                    <p>${tx.date} • ${tx.category}</p>
+                    <h4>${tx.description || categoryLabel}</h4>
+                    <p>${tx.date} • ${categoryLabel}</p>
                 </div>
             </div>
             <div class="tx-amount ${amountClass}">${amountPrefix}${formatRupiah(tx.amount)}</div>
@@ -729,7 +740,7 @@ function generateReport() {
     reportPieChart = new Chart(ctx, {
         type: 'pie',
         data: {
-            labels: ['Living', 'Saving', 'Playing', 'Emergency'],
+            labels: ['Kebutuhan', 'Tabungan', 'Hiburan', 'Darurat'],
             datasets: [{
                 data: [summary.livingExpense, summary.savingExpense, summary.playingExpense, summary.emergencyExpense],
                 backgroundColor: ['#3B82F6', '#10B981', '#F59E0B', '#EF4444']
@@ -747,19 +758,19 @@ function generateReport() {
     const breakdown = document.getElementById('categoryBreakdown');
     breakdown.innerHTML = `
         <div class="breakdown-item">
-            <span>🏠 Living</span>
+            <span>🏠 Kebutuhan</span>
             <strong>${formatRupiah(summary.livingExpense)}</strong>
         </div>
         <div class="breakdown-item">
-            <span>💎 Saving</span>
+            <span>💎 Tabungan</span>
             <strong>${formatRupiah(summary.savingExpense)}</strong>
         </div>
         <div class="breakdown-item">
-            <span>🎮 Playing</span>
+            <span>🎮 Hiburan</span>
             <strong>${formatRupiah(summary.playingExpense)}</strong>
         </div>
         <div class="breakdown-item">
-            <span>🚨 Emergency</span>
+            <span>🚨 Darurat</span>
             <strong>${formatRupiah(summary.emergencyExpense)}</strong>
         </div>
     `;
@@ -866,7 +877,7 @@ function generateCategoryAnalysis(summary, amounts) {
     const categories = [
         {
             key: 'living',
-            name: 'Living',
+            name: 'Kebutuhan',
             icon: '🏠',
             budget: amounts.living,
             used: summary.livingExpense,
@@ -874,7 +885,7 @@ function generateCategoryAnalysis(summary, amounts) {
         },
         {
             key: 'saving',
-            name: 'Saving',
+            name: 'Tabungan',
             icon: '💎',
             budget: amounts.saving,
             used: summary.savingIncome,
@@ -883,7 +894,7 @@ function generateCategoryAnalysis(summary, amounts) {
         },
         {
             key: 'playing',
-            name: 'Playing',
+            name: 'Hiburan',
             icon: '🎮',
             budget: amounts.playing,
             used: summary.playingExpense,
@@ -891,7 +902,7 @@ function generateCategoryAnalysis(summary, amounts) {
         },
         {
             key: 'emergency',
-            name: 'Emergency',
+            name: 'Darurat',
             icon: '🚨',
             budget: amounts.emergency,
             used: summary.emergencyExpense,
@@ -936,7 +947,7 @@ function generateCategoryAnalysis(summary, amounts) {
                     <div class="category-icon ${cat.key}">${cat.icon}</div>
                     <div class="category-details">
                         <h5>${cat.name}</h5>
-                        <p>${cat.desc} • Budget: ${formatRupiah(cat.budget)}</p>
+                        <p>${cat.desc} • Anggaran: ${formatRupiah(cat.budget)}</p>
                     </div>
                 </div>
                 <div class="category-status">
@@ -968,15 +979,15 @@ function generateSuggestions(summary, budget, amounts) {
         suggestions.push({
             type: 'warning',
             icon: '🏠',
-            title: 'Budget Living Terlampaui',
-            text: `Pengeluaran kebutuhan pokok melebihi budget ${formatRupiah(over)}. Coba catat detail pengeluaran dan cari yang bisa dikurangi.`
+            title: 'Anggaran Kebutuhan Terlampaui',
+            text: `Pengeluaran kebutuhan pokok melebihi anggaran ${formatRupiah(over)}. Coba catat detail pengeluaran dan cari yang bisa dikurangi.`
         });
     } else if (summary.livingExpense < amounts.living * 0.5 && summary.livingExpense > 0) {
         suggestions.push({
             type: 'success',
             icon: '✨',
             title: 'Hemat di Kebutuhan Pokok',
-            text: `Bagus! Kamu hanya menggunakan ${((summary.livingExpense / amounts.living) * 100).toFixed(0)}% budget living. Sisa bisa dialokasikan ke tabungan.`
+            text: `Bagus! Kamu hanya menggunakan ${((summary.livingExpense / amounts.living) * 100).toFixed(0)}% anggaran kebutuhan. Sisa bisa dialokasikan ke tabungan.`
         });
     }
 
@@ -985,8 +996,8 @@ function generateSuggestions(summary, budget, amounts) {
         suggestions.push({
             type: 'warning',
             icon: '🎮',
-            title: 'Budget Hiburan Terlampaui',
-            text: `Pengeluaran hiburan melebihi budget. Coba batasi pengeluaran untuk hiburan dan fokus pada kebutuhan pokok.`
+            title: 'Anggaran Hiburan Terlampaui',
+            text: `Pengeluaran hiburan melebihi anggaran. Coba batasi pengeluaran untuk hiburan dan fokus pada kebutuhan pokok.`
         });
     }
 
@@ -1067,7 +1078,7 @@ function generateTips(summary, budget) {
         },
         {
             icon: '📅',
-            text: 'Review keuangan setiap minggu untuk tetap on track dengan budget.'
+            text: 'Review keuangan setiap minggu untuk tetap sesuai anggaran.'
         }
     ];
 
@@ -1100,7 +1111,7 @@ function exportCSV() {
     const transactions = getTransactionsByMonth(month);
 
     if (transactions.length === 0) {
-        showToast('Tidak ada data untuk di-export', 'warning');
+        showToast('Tidak ada data untuk diekspor', 'warning');
         return;
     }
 
@@ -1108,14 +1119,14 @@ function exportCSV() {
     const rows = transactions.map(tx => [
         tx.date,
         tx.type === 'income' ? 'Pemasukan' : 'Pengeluaran',
-        tx.category,
+        getCategoryLabel(tx.category),
         tx.amount,
         tx.description || ''
     ]);
 
     const csv = [headers, ...rows].map(row => row.join(',')).join('\n');
     downloadFile(`keuangan_${month}.csv`, csv, 'text/csv');
-    showToast('File CSV berhasil di-download!');
+    showToast('File CSV berhasil diunduh!');
 }
 
 // ==================== DATA MANAGEMENT ====================
@@ -1129,7 +1140,7 @@ function exportAllData() {
 
     const json = JSON.stringify(data, null, 2);
     downloadFile(`keuangan_backup_${username}.json`, json, 'application/json');
-    showToast('Data berhasil di-export!');
+    showToast('Data berhasil diekspor!');
 }
 
 function importData(file) {
@@ -1145,7 +1156,7 @@ function importData(file) {
                 saveUserTransactions(data.transactions);
             }
 
-            showToast('Data berhasil di-import!');
+            showToast('Data berhasil diimpor!');
             loadBudgetSettings();
             updateDashboard();
             loadTransactionList();
@@ -1305,7 +1316,7 @@ document.addEventListener('DOMContentLoaded', function() {
             emergency
         };
         saveUserBudget(budget);
-        showToast('Pengaturan budget berhasil disimpan!');
+        showToast('Pengaturan anggaran berhasil disimpan!');
         updateDashboard();
     });
 

@@ -62,7 +62,7 @@
             </div>
             <ul class="nav-menu">
                 <li class="nav-item active" data-page="dashboard">
-                    <span class="icon">📊</span> Dashboard
+                    <span class="icon">📊</span> Beranda
                 </li>
                 <li class="nav-item" data-page="transaksi">
                     <span class="icon">💰</span> Transaksi
@@ -71,7 +71,7 @@
                     <span class="icon">🏦</span> Tabungan
                 </li>
                 <li class="nav-item" data-page="budget">
-                    <span class="icon">📋</span> Atur Budget
+                    <span class="icon">📋</span> Atur Anggaran
                 </li>
                 <li class="nav-item" data-page="laporan">
                     <span class="icon">📈</span> Laporan
@@ -87,7 +87,7 @@
         <main class="main-content">
             <!-- DASHBOARD -->
             <section id="dashboardSection" class="content-section">
-                <h2>Dashboard Keuangan</h2>
+                <h2>Beranda Keuangan</h2>
                 <div class="month-selector">
                     <label>Bulan:</label>
                     <input type="month" id="dashboardMonth">
@@ -116,12 +116,12 @@
                 </div>
 
                 <div class="budget-overview">
-                    <h3>Status Budget Bulan Ini</h3>
+                    <h3>Status Anggaran Bulan Ini</h3>
                     <div class="budget-cards">
                         <div class="budget-card living">
-                            <h4>🏠 Living</h4>
+                            <h4>🏠 Kebutuhan</h4>
                             <div class="budget-info">
-                                <span>Budget: <strong id="livingBudget">Rp 0</strong></span>
+                                <span>Anggaran: <strong id="livingBudget">Rp 0</strong></span>
                                 <span>Terpakai: <strong id="livingUsed">Rp 0</strong></span>
                                 <span>Sisa: <strong id="livingRemain">Rp 0</strong></span>
                             </div>
@@ -130,7 +130,7 @@
                             </div>
                         </div>
                         <div class="budget-card saving">
-                            <h4>💎 Saving</h4>
+                            <h4>💎 Tabungan</h4>
                             <div class="budget-info">
                                 <span>Target: <strong id="savingBudget">Rp 0</strong></span>
                                 <span>Tersimpan: <strong id="savingUsed">Rp 0</strong></span>
@@ -141,9 +141,9 @@
                             </div>
                         </div>
                         <div class="budget-card playing">
-                            <h4>🎮 Playing</h4>
+                            <h4>🎮 Hiburan</h4>
                             <div class="budget-info">
-                                <span>Budget: <strong id="playingBudget">Rp 0</strong></span>
+                                <span>Anggaran: <strong id="playingBudget">Rp 0</strong></span>
                                 <span>Terpakai: <strong id="playingUsed">Rp 0</strong></span>
                                 <span>Sisa: <strong id="playingRemain">Rp 0</strong></span>
                             </div>
@@ -152,9 +152,9 @@
                             </div>
                         </div>
                         <div class="budget-card emergency">
-                            <h4>🚨 Emergency</h4>
+                            <h4>🚨 Darurat</h4>
                             <div class="budget-info">
-                                <span>Budget: <strong id="emergencyBudget">Rp 0</strong></span>
+                                <span>Anggaran: <strong id="emergencyBudget">Rp 0</strong></span>
                                 <span>Terpakai: <strong id="emergencyUsed">Rp 0</strong></span>
                                 <span>Sisa: <strong id="emergencyRemain">Rp 0</strong></span>
                             </div>
@@ -171,7 +171,7 @@
                         <canvas id="expenseChart"></canvas>
                     </div>
                     <div class="chart-box">
-                        <h3>Trend Bulanan</h3>
+                        <h3>Tren Bulanan</h3>
                         <canvas id="trendChart"></canvas>
                     </div>
                 </div>
@@ -199,10 +199,10 @@
                             <div class="form-group">
                                 <label>Kategori</label>
                                 <select id="txCategory" required>
-                                    <option value="living">Living (Kebutuhan)</option>
-                                    <option value="saving">Saving (Tabungan)</option>
-                                    <option value="playing">Playing (Hiburan)</option>
-                                    <option value="emergency">Emergency (Darurat)</option>
+                                    <option value="living">Kebutuhan</option>
+                                    <option value="saving">Tabungan</option>
+                                    <option value="playing">Hiburan</option>
+                                    <option value="emergency">Darurat</option>
                                 </select>
                             </div>
                         </div>
@@ -233,10 +233,10 @@
                     </select>
                     <select id="filterCategory">
                         <option value="all">Semua Kategori</option>
-                        <option value="living">Living</option>
-                        <option value="saving">Saving</option>
-                        <option value="playing">Playing</option>
-                        <option value="emergency">Emergency</option>
+                        <option value="living">Kebutuhan</option>
+                        <option value="saving">Tabungan</option>
+                        <option value="playing">Hiburan</option>
+                        <option value="emergency">Darurat</option>
                     </select>
                 </div>
 
@@ -286,19 +286,19 @@
 
             <!-- BUDGET -->
             <section id="budgetSection" class="content-section" style="display:none;">
-                <h2>Atur Pembagian Budget</h2>
+                <h2>Atur Pembagian Anggaran</h2>
                 <p class="section-desc">Atur persentase pembagian gaji bulanan kamu</p>
 
                 <div class="budget-settings">
                     <div class="gaji-setting">
                         <label>Gaji Bulanan</label>
                         <input type="number" id="gajiInput" placeholder="6000000">
-                        <button class="btn btn-secondary" id="updateGaji">Update Gaji</button>
+                        <button class="btn btn-secondary" id="updateGaji">Perbarui Gaji</button>
                     </div>
 
                     <div class="percentage-settings">
                         <div class="percentage-item">
-                            <label>🏠 Living (Kebutuhan Pokok)</label>
+                            <label>🏠 Kebutuhan Pokok</label>
                             <div class="percentage-input">
                                 <input type="range" id="livingPercent" min="0" max="100" value="50">
                                 <span id="livingPercentValue">50%</span>
@@ -306,7 +306,7 @@
                             <p class="amount-preview">= Rp <span id="livingAmount">0</span></p>
                         </div>
                         <div class="percentage-item">
-                            <label>💎 Saving (Tabungan)</label>
+                            <label>💎 Tabungan</label>
                             <div class="percentage-input">
                                 <input type="range" id="savingPercent" min="0" max="100" value="30">
                                 <span id="savingPercentValue">30%</span>
@@ -314,7 +314,7 @@
                             <p class="amount-preview">= Rp <span id="savingAmount">0</span></p>
                         </div>
                         <div class="percentage-item">
-                            <label>🎮 Playing (Hiburan)</label>
+                            <label>🎮 Hiburan</label>
                             <div class="percentage-input">
                                 <input type="range" id="playingPercent" min="0" max="100" value="10">
                                 <span id="playingPercentValue">10%</span>
@@ -322,7 +322,7 @@
                             <p class="amount-preview">= Rp <span id="playingAmount">0</span></p>
                         </div>
                         <div class="percentage-item emergency-item">
-                            <label>🚨 Emergency (Dana Darurat)</label>
+                            <label>🚨 Dana Darurat</label>
                             <div class="percentage-input">
                                 <input type="range" id="emergencyPercent" min="0" max="100" value="10">
                                 <span id="emergencyPercentValue">10%</span>
@@ -336,7 +336,7 @@
                         <span id="percentWarning" class="warning" style="display:none;">Total harus 100%!</span>
                     </div>
 
-                    <button class="btn btn-primary" id="saveBudget">Simpan Pengaturan Budget</button>
+                    <button class="btn btn-primary" id="saveBudget">Simpan Pengaturan Anggaran</button>
                 </div>
             </section>
 
@@ -391,7 +391,7 @@
                 </div>
 
                 <div class="export-section">
-                    <button class="btn btn-secondary" id="exportCSV">Export CSV</button>
+                    <button class="btn btn-secondary" id="exportCSV">Ekspor CSV</button>
                 </div>
 
                 <!-- ANALISIS & SARAN -->
@@ -474,13 +474,13 @@
                     </div>
 
                     <div class="setting-card danger">
-                        <h3>Data & Backup</h3>
-                        <p>Export semua data keuangan kamu</p>
-                        <button class="btn btn-secondary" id="exportData">Export Data (JSON)</button>
+                        <h3>Data & Cadangan</h3>
+                        <p>Ekspor semua data keuangan kamu</p>
+                        <button class="btn btn-secondary" id="exportData">Ekspor Data (JSON)</button>
                         <hr>
-                        <p>Import data dari backup</p>
+                        <p>Impor data dari cadangan</p>
                         <input type="file" id="importFile" accept=".json">
-                        <button class="btn btn-secondary" id="importData">Import Data</button>
+                        <button class="btn btn-secondary" id="importData">Impor Data</button>
                         <hr>
                         <p class="warning-text">Hapus semua data (tidak bisa dikembalikan!)</p>
                         <button class="btn btn-danger" id="clearData">Hapus Semua Data</button>
