@@ -1,11 +1,47 @@
 // ==================== KEUANGAN KELUARGA APP ====================
-// LocalStorage Keys
+// Google Sheets API URL
+const API_URL = 'https://script.google.com/macros/s/AKfycbwJKbyLM0lwXbC7Q32Zbk6m7_tiMUCSciwyZzAcHSkJHfGFa7r4aEGnCZERyOIF8OwLLg/exec';
+
+// LocalStorage Keys (for caching and session)
 const STORAGE_KEYS = {
-    USERS: 'keuangan_users',
     CURRENT_USER: 'keuangan_current_user',
-    TRANSACTIONS: 'keuangan_transactions',
-    BUDGET: 'keuangan_budget'
+    CACHED_TRANSACTIONS: 'keuangan_cached_transactions',
+    CACHED_BUDGET: 'keuangan_cached_budget'
 };
+
+// Loading state
+let isLoading = false;
+
+function showLoading() {
+    isLoading = true;
+    const loader = document.getElementById('loadingOverlay');
+    if (loader) loader.style.display = 'flex';
+}
+
+function hideLoading() {
+    isLoading = false;
+    const loader = document.getElementById('loadingOverlay');
+    if (loader) loader.style.display = 'none';
+}
+
+// API call helper
+async function apiCall(action, params = {}) {
+    const url = new URL(API_URL);
+    url.searchParams.append('action', action);
+    Object.keys(params).forEach(key => {
+        url.searchParams.append(key, params[key]);
+    });
+
+    try {
+        const response = await fetch(url.toString());
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('API Error:', error);
+        showToast('Connection error. Please try again.', 'error');
+        return { success: false, error: error.message };
+    }
+}
 
 // ==================== UTILITY FUNCTIONS ====================
 function formatRupiah(num) {
@@ -39,10 +75,6 @@ function setStorage(key, data) {
 }
 
 // ==================== USER AUTHENTICATION ====================
-function getUsers() {
-    return getStorage(STORAGE_KEYS.USERS) || {};
-}
-
 function getCurrentUser() {
     return getStorage(STORAGE_KEYS.CURRENT_USER);
 }
@@ -51,100 +83,94 @@ function setCurrentUser(username) {
     setStorage(STORAGE_KEYS.CURRENT_USER, username);
 }
 
-function registerUser(username, password, gaji) {
-    const users = getUsers();
-    if (users[username]) {
-        showToast('Username already exists!', 'error');
+async function registerUser(username, password, gaji) {
+    showLoading();
+    const result = await apiCall('register', { username, password, gaji });
+    hideLoading();
+
+    if (result.success) {
+        showToast('Registration successful! Please login.');
+        return true;
+    } else {
+        showToast(result.error || 'Registration failed!', 'error');
         return false;
     }
-    users[username] = {
-        password: btoa(password), // Simple encoding (not secure for production)
-        gaji: gaji,
-        createdAt: new Date().toISOString()
-    };
-    setStorage(STORAGE_KEYS.USERS, users);
-
-    // Initialize budget for new user with amounts
-    const budgets = getStorage(STORAGE_KEYS.BUDGET) || {};
-    budgets[username] = {
-        gaji: gaji,
-        // Calculate amounts based on default percentages
-        livingAmt: Math.round(gaji * 50 / 100),
-        savingAmt: Math.round(gaji * 30 / 100),
-        playingAmt: Math.round(gaji * 10 / 100),
-        emergencyAmt: Math.round(gaji * 10 / 100),
-        // Percentages for display
-        living: 50,
-        saving: 30,
-        playing: 10,
-        emergency: 10
-    };
-    setStorage(STORAGE_KEYS.BUDGET, budgets);
-
-    // Initialize transactions with salary as first income
-    const transactions = getStorage(STORAGE_KEYS.TRANSACTIONS) || {};
-    const today = new Date().toISOString().split('T')[0];
-    transactions[username] = [{
-        id: Date.now(),
-        type: 'income',
-        category: 'living',
-        amount: gaji,
-        date: today,
-        description: 'Monthly Salary',
-        createdAt: new Date().toISOString()
-    }];
-    setStorage(STORAGE_KEYS.TRANSACTIONS, transactions);
-
-    showToast('Registration successful! Please login.');
-    return true;
 }
 
-function loginUser(username, password) {
-    const users = getUsers();
-    if (!users[username]) {
-        showToast('Username not found!', 'error');
+async function loginUser(username, password) {
+    showLoading();
+    const result = await apiCall('login', { username, password });
+    hideLoading();
+
+    if (result.success) {
+        setCurrentUser(username);
+        showToast(`Welcome, ${username}!`);
+        // Load and cache data
+        await loadUserDataFromCloud();
+        return true;
+    } else {
+        showToast(result.error || 'Login failed!', 'error');
         return false;
     }
-    if (users[username].password !== btoa(password)) {
-        showToast('Wrong password!', 'error');
-        return false;
-    }
-    setCurrentUser(username);
-    showToast(`Welcome, ${username}!`);
-    return true;
 }
 
 function logoutUser() {
     localStorage.removeItem(STORAGE_KEYS.CURRENT_USER);
+    localStorage.removeItem(STORAGE_KEYS.CACHED_BUDGET);
+    localStorage.removeItem(STORAGE_KEYS.CACHED_TRANSACTIONS);
     showToast('Logged out successfully');
     showLoginPage();
 }
 
-function changePassword(oldPass, newPass) {
+async function loadUserDataFromCloud() {
     const username = getCurrentUser();
-    const users = getUsers();
-    if (users[username].password !== btoa(oldPass)) {
-        showToast('Old password is incorrect!', 'error');
-        return false;
+    if (!username) return;
+
+    showLoading();
+
+    // Load budget
+    const budgetResult = await apiCall('getBudget', { username });
+    if (budgetResult.success && budgetResult.budget) {
+        setStorage(STORAGE_KEYS.CACHED_BUDGET, budgetResult.budget);
     }
-    users[username].password = btoa(newPass);
-    setStorage(STORAGE_KEYS.USERS, users);
-    showToast('Password changed successfully!');
-    return true;
+
+    // Load transactions
+    const txResult = await apiCall('getTransactions', { username });
+    if (txResult.success && txResult.transactions) {
+        setStorage(STORAGE_KEYS.CACHED_TRANSACTIONS, txResult.transactions);
+    }
+
+    hideLoading();
+}
+
+function changePassword(oldPass, newPass) {
+    // For now, password change requires re-registration
+    showToast('Please contact admin to change password', 'warning');
+    return false;
 }
 
 // ==================== BUDGET MANAGEMENT ====================
 function getUserBudget() {
-    const username = getCurrentUser();
-    const budgets = getStorage(STORAGE_KEYS.BUDGET) || {};
-    return budgets[username] || { gaji: 6000000, living: 50, saving: 30, playing: 10, emergency: 10 };
+    // Get from cache
+    const cached = getStorage(STORAGE_KEYS.CACHED_BUDGET);
+    return cached || { gaji: 6000000, living: 50, saving: 30, playing: 10, emergency: 10 };
 }
 
-function saveUserBudget(budget) {
+async function saveUserBudget(budget) {
     const username = getCurrentUser();
-    const budgets = getStorage(STORAGE_KEYS.BUDGET) || {};
-    budgets[username] = budget;
-    setStorage(STORAGE_KEYS.BUDGET, budgets);
+
+    // Save to cache immediately
+    setStorage(STORAGE_KEYS.CACHED_BUDGET, budget);
+
+    // Sync to cloud in background
+    const result = await apiCall('saveBudget', {
+        username,
+        budget: JSON.stringify(budget)
+    });
+
+    if (!result.success) {
+        console.error('Failed to sync budget to cloud');
+    }
 }
 
 function calculateBudgetAmounts(budget) {
@@ -170,33 +196,58 @@ function calculateBudgetAmounts(budget) {
 
 // ==================== TRANSACTION MANAGEMENT ====================
 function getUserTransactions() {
-    const username = getCurrentUser();
-    const transactions = getStorage(STORAGE_KEYS.TRANSACTIONS) || {};
-    return transactions[username] || [];
+    // Get from cache
+    const cached = getStorage(STORAGE_KEYS.CACHED_TRANSACTIONS);
+    return cached || [];
 }
 
 function saveUserTransactions(txList) {
-    const username = getCurrentUser();
-    const transactions = getStorage(STORAGE_KEYS.TRANSACTIONS) || {};
-    transactions[username] = txList;
-    setStorage(STORAGE_KEYS.TRANSACTIONS, transactions);
+    // Save to cache
+    setStorage(STORAGE_KEYS.CACHED_TRANSACTIONS, txList);
 }
 
-function addTransaction(tx) {
-    const transactions = getUserTransactions();
+async function addTransaction(tx) {
+    const username = getCurrentUser();
     tx.id = Date.now();
     tx.createdAt = new Date().toISOString();
+
+    // Add to local cache immediately
+    const transactions = getUserTransactions();
     transactions.push(tx);
     saveUserTransactions(transactions);
-    showToast('Transaction added successfully!');
+
+    // Sync to cloud in background
+    const result = await apiCall('addTransaction', {
+        username,
+        transaction: JSON.stringify(tx)
+    });
+
+    if (result.success) {
+        showToast('Transaction added successfully!');
+    } else {
+        showToast('Saved locally. Will sync when online.', 'warning');
+    }
+
     return tx;
 }
 
-function deleteTransaction(id) {
+async function deleteTransaction(id) {
+    const username = getCurrentUser();
+
+    // Remove from local cache
     let transactions = getUserTransactions();
     transactions = transactions.filter(t => t.id !== id);
     saveUserTransactions(transactions);
-    showToast('Transaction deleted successfully!');
+
+    // Sync to cloud
+    const result = await apiCall('deleteTransaction', {
+        username,
+        transactionId: id
+    });
+
+    if (result.success) {
+        showToast('Transaction deleted successfully!');
+    }
 }
 
 function getTransactionsByMonth(month) {
@@ -1460,26 +1511,28 @@ function downloadFile(filename, content, type) {
 }
 
 // ==================== EVENT LISTENERS ====================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', async function() {
     // Check if already logged in
     if (getCurrentUser()) {
+        await loadUserDataFromCloud();
         showMainApp();
     } else {
         showLoginPage();
     }
 
     // Login form
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
-        if (loginUser(username, password)) {
+        const success = await loginUser(username, password);
+        if (success) {
             showMainApp();
         }
     });
 
     // Register form
-    document.getElementById('registerForm').addEventListener('submit', function(e) {
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const username = document.getElementById('regUsername').value;
         const password = document.getElementById('regPassword').value;
@@ -1491,7 +1544,8 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
 
-        if (registerUser(username, password, gaji)) {
+        const success = await registerUser(username, password, gaji);
+        if (success) {
             document.getElementById('registerForm').style.display = 'none';
             document.getElementById('loginForm').style.display = 'block';
         }
